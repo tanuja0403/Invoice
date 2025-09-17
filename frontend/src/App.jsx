@@ -34,7 +34,7 @@ export default function App() {
   }
   const handleRemoveInvoice = (invoiceId) => {
     setInvoices((prevInvoices) =>
-      prevInvoices.filter((invoice) => invoice._id !== invoiceId) // assuming _id from backend
+      prevInvoices.filter((invoice) => invoice._id !== invoiceId) 
     )
   }
  

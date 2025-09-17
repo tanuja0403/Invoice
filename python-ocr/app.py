@@ -201,9 +201,9 @@ def extract_fields_from_text(text: str) -> Dict[str, Any]:
 
     # Regex patterns
     date_patterns = [
-        r"\b(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\b",     # 2025-09-15
-        r"\b(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})\b",   # 09/15/2025
-        r"\b([A-Za-z]{3,9}\s+\d{1,2},\s*\d{4})\b",  # September 15, 2025
+        r"\b(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\b",    
+        r"\b(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})\b",   
+        r"\b([A-Za-z]{3,9}\s+\d{1,2},\s*\d{4})\b",  
     ]
     invoice_no_patterns = [
         r"(?:Invoice\s*(?:No\.?|#|Number)[:\s]*)([A-Za-z0-9\-\/]+)",
@@ -263,10 +263,10 @@ def extract_fields_from_text(text: str) -> Dict[str, Any]:
             vendor = ln
             break
 
-    # Optional: Extract line items (very rough)
+   
     items = []
     for ln in lines:
-        if re.search(r"\d+\s+x\s+.*\d+", ln):  # e.g., 2 x ItemName 100
+        if re.search(r"\d+\s+x\s+.*\d+", ln): 
             items.append(ln)
 
     return {
@@ -303,8 +303,8 @@ def ocr_extract():
     reader = get_reader()
     all_text = []
     for img_bytes in images_bytes:
-        import numpy as np  # type: ignore
-        from PIL import Image  # type: ignore
+        import numpy as np  
+        from PIL import Image  
 
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         np_img = np.array(img)

@@ -67,17 +67,17 @@
 
 import React, { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import '../css/Dashboard.css' // Import the new CSS file
+import '../css/Dashboard.css' 
 
 export function Dashboard({ invoices, onRemoveInvoice }) {
-  // Ensure tableRows is always an array
+  
   const tableRows = invoices || []
 
   const totalByVendor = useMemo(() => {
     const acc = {}
     for (const inv of tableRows) {
       const vendor = inv.vendor || 'Unknown'
-      // Clean and parse the total value
+      
       const val = parseFloat(String(inv.total || '').replace(/[,\s]/g, ''))
       const num = Number.isFinite(val) ? val : 0
       acc[vendor] = (acc[vendor] || 0) + num
@@ -98,7 +98,7 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
               <th>Total</th>
               <th>Filename</th>
               <th>Created</th>
-              <th>Actions</th> {/* Added Actions column */}
+              <th>Actions</th> 
             </tr>
           </thead>
           <tbody>
@@ -110,7 +110,7 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
                 <td>{r.filename || '-'}</td>
                 <td>{new Date(r.createdAt).toLocaleString()}</td>
                 <td>
-                  {/* Add remove button that calls the prop function */}
+                  
                   <button 
                     className="remove-btn" 
                     onClick={() => onRemoveInvoice(r._id)}
@@ -123,7 +123,7 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
             ))}
             {tableRows.length === 0 && (
               <tr className="empty-row">
-                <td colSpan="6"> {/* Updated colSpan to 6 */}
+                <td colSpan="6">
                   No data yet. Upload an invoice to get started.
                 </td>
               </tr>

@@ -25,9 +25,12 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 }
 
 // MongoDB
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/invoice';
-await mongoose.connect("mongodb+srv://tanuja1234:tanuja1234@devconnector.yyb8nkr.mongodb.net/invoice");
-
+const MONGODB_URI = process.env.MONGODB_URI;
+await mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+screenTop
 const invoiceSchema = new mongoose.Schema(
   {
     filename: String,

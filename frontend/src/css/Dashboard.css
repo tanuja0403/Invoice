@@ -26,7 +26,7 @@
   .dashboard-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px; /* Ensures table doesn't get too squished */
+    min-width: 600px; 
   }
   
   .dashboard-table th,
@@ -34,7 +34,7 @@
     padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
-    white-space: nowrap; /* Prevents cell content from wrapping */
+    white-space: nowrap; 
   }
   
   .dashboard-table th {
@@ -72,7 +72,7 @@
   
   .remove-btn:hover {
     opacity: 1;
-    background-color: #fee2e2; /* Light red background on hover */
+    background-color: #fee2e2; 
   }
   
   /* Chart container */
