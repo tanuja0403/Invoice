@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { Upload } from './components/Upload.jsx'
 import { Dashboard } from './components/Dashboard.jsx'
+import './css/Dashboard.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
@@ -32,22 +33,53 @@ export default function App() {
   const handleUploaded = async () => {
     await fetchInvoices()
   }
-  const handleRemoveInvoice = (invoiceId) => {
-    setInvoices((prevInvoices) =>
-      prevInvoices.filter((invoice) => invoice._id !== invoiceId) 
-    )
+  const handleRemoveInvoice = async (invoiceId) => {
+    try {
+      await client.delete(`/api/invoices/${invoiceId}`)
+      setInvoices((prevInvoices) =>
+        prevInvoices.filter((invoice) => invoice._id !== invoiceId)
+      )
+    } catch (err) {
+      console.error("Failed to delete invoice:", err)
+    }
   }
- 
+  
+  
+  
+  
 
   return (
-    <div style={{ fontFamily: 'Inter, system-ui, Arial', padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      <h1>Invoice OCR Dashboard</h1>
-      <Upload apiBaseUrl={API_BASE_URL} onUploaded={handleUploaded} />
-      {loading && <p>Loading…</p>}
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
-      <Dashboard 
-      invoices={invoices}
-      onRemoveInvoice={handleRemoveInvoice}/>
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-icon">📄</span>
+          <span className="brand-name">InvoiceFlow</span>
+        </div>
+        <nav className="nav">
+          <a className="nav-item active">Dashboard</a>
+          <a className="nav-item">Reports</a>
+          <a className="nav-item">Settings</a>
+        </nav>
+        <div className="help-link">Help</div>
+      </aside>
+      <main className="content">
+        <header className="content-header">
+          <h1>Documents</h1>
+          <button className="primary-btn">+ New Document</button>
+        </header>
+
+        <section className="dropzone-section">
+          <Upload apiBaseUrl={API_BASE_URL} onUploaded={handleUploaded} />
+        </section>
+
+        {loading && <p className="info-text">Loading…</p>}
+        {error && <p className="error-text">{error}</p>}
+
+        <section className="dashboard-section">
+          <h2 className="section-title">Extracted Details</h2>
+          <Dashboard invoices={invoices} onRemoveInvoice={handleRemoveInvoice} />
+        </section>
+      </main>
     </div>
   )
 }

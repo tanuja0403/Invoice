@@ -9,6 +9,8 @@ import axios from 'axios';
 import FormData from 'form-data';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import invoiceRoutes from './routes/invoiceRoutes.js';
+import invoiceSchema from './models/Invoice.js';
 
 dotenv.config();
 
@@ -26,21 +28,11 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 
 // MongoDB
 const MONGODB_URI = process.env.MONGODB_URI;
-await mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-screenTop
-const invoiceSchema = new mongoose.Schema(
-  {
-    filename: String,
-    vendor: String,
-    date: String,
-    total: String,
-    raw_text: String
-  },
-  { timestamps: true }
-);
+await mongoose.connect(process.env.MONGO_URI) 
+.then(() => console.log("MongoDB connected"))
+.catch((err) => console.error(err));
+
+
 
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 
@@ -48,6 +40,7 @@ const app = express();
 app.use(cors({ origin: CLIENT_ORIGIN }));
 app.use(morgan('dev'));
 app.use(express.json());
+// app.use('/api/invoices', invoiceRoutes);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -102,6 +95,22 @@ app.post('/api/invoices', upload.single('file'), async (req, res) => {
     res.status(500).json({ error: message });
   }
 });
+
+app.delete("/api/invoices/:id", async (req, res) => {
+    const { id } = req.params
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid invoice ID" })
+  
+    try {
+      const deleted = await Invoice.findByIdAndDelete(id)
+      if (!deleted) return res.status(404).json({ error: "Invoice not found" })
+      res.json({ message: "Invoice deleted successfully" })
+    } catch (err) {
+      console.error(err)
+      res.status(500).json({ error: "Server error" })
+    }
+  })
+  
+  
 
 app.get('/api/invoices', async (req, res) => {
   const items = await Invoice.find().sort({ createdAt: -1 }).lean();

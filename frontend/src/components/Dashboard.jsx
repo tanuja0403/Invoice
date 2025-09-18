@@ -70,12 +70,19 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import '../css/Dashboard.css' 
 
 export function Dashboard({ invoices, onRemoveInvoice }) {
-  
+  const [activeTab, setActiveTab] = React.useState('all')
   const tableRows = invoices || []
+
+  const filteredRows = React.useMemo(() => {
+    if (activeTab === 'all') return tableRows
+    if (activeTab === 'invoices') return tableRows.filter(r => (r.type || 'invoice') === 'invoice')
+    if (activeTab === 'receipts') return tableRows.filter(r => (r.type || 'invoice') === 'receipt')
+    return tableRows
+  }, [tableRows, activeTab])
 
   const totalByVendor = useMemo(() => {
     const acc = {}
-    for (const inv of tableRows) {
+    for (const inv of filteredRows) {
       const vendor = inv.vendor || 'Unknown'
       
       const val = parseFloat(String(inv.total || '').replace(/[,\s]/g, ''))
@@ -83,11 +90,16 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
       acc[vendor] = (acc[vendor] || 0) + num
     }
     return Object.entries(acc).map(([name, value]) => ({ name, value }))
-  }, [tableRows])
+  }, [filteredRows])
 
   return (
     <div className="dashboard-container">
-      <h2 className="dashboard-heading">Extracted Invoices</h2>
+      <div className="tabs">
+        <button className={`tab ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>All</button>
+        <button className={`tab ${activeTab === 'invoices' ? 'active' : ''}`} onClick={() => setActiveTab('invoices')}>Invoices</button>
+        <button className={`tab ${activeTab === 'receipts' ? 'active' : ''}`} onClick={() => setActiveTab('receipts')}>Receipts</button>
+      </div>
+      <h2 className="dashboard-heading">Extracted Details</h2>
       
       <div className="table-wrapper">
         <table className="dashboard-table">
@@ -102,7 +114,7 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
             </tr>
           </thead>
           <tbody>
-            {tableRows.map((r) => (
+            {filteredRows.map((r) => (
               <tr key={r._id}>
                 <td>{r.vendor || '-'}</td>
                 <td>{r.date || '-'}</td>
@@ -110,7 +122,9 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
                 <td>{r.filename || '-'}</td>
                 <td>{new Date(r.createdAt).toLocaleString()}</td>
                 <td>
-                  
+                  <span className={`status-badge ${r.status || 'pending'}`}>
+                    {(r.status || 'pending').replace(/^./, c => c.toUpperCase())}
+                  </span>
                   <button 
                     className="remove-btn" 
                     onClick={() => onRemoveInvoice(r._id)}
@@ -121,7 +135,7 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
                 </td>
               </tr>
             ))}
-            {tableRows.length === 0 && (
+            {filteredRows.length === 0 && (
               <tr className="empty-row">
                 <td colSpan="6">
                   No data yet. Upload an invoice to get started.
