@@ -4,6 +4,11 @@ import Invoice from "../models/Invoice.js";
 
 const router = express.Router();
 
+router.get("/", async (req, res) => {
+  const invoices = await Invoice.find().sort({ createdAt: -1 });
+  res.json(invoices);
+});
+
 router.delete("/:id", async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
