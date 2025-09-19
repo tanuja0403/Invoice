@@ -8,6 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
+  const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -26,12 +27,22 @@ export default function App() {
     }
   }
 
+  const fetchSummary = async () => {
+    try {
+      const { data } = await client.get('/api/analytics/summary')
+      setSummary(data)
+    } catch (e) {
+      // ignore silently on first load
+    }
+  }
+
   useEffect(() => {
     fetchInvoices()
+    fetchSummary()
   }, [])
 
   const handleUploaded = async () => {
-    await fetchInvoices()
+    await Promise.all([fetchInvoices(), fetchSummary()])
   }
   const handleRemoveInvoice = async (invoiceId) => {
     try {
@@ -77,7 +88,7 @@ export default function App() {
 
         <section className="dashboard-section">
           <h2 className="section-title">Extracted Details</h2>
-          <Dashboard invoices={invoices} onRemoveInvoice={handleRemoveInvoice} />
+          <Dashboard invoices={invoices} analytics={summary} onRemoveInvoice={handleRemoveInvoice} />
         </section>
       </main>
     </div>

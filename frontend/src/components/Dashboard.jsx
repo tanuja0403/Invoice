@@ -66,10 +66,10 @@
 
 
 import React, { useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts'
 import '../css/Dashboard.css' 
 
-export function Dashboard({ invoices, onRemoveInvoice }) {
+export function Dashboard({ invoices, analytics, onRemoveInvoice }) {
   const [activeTab, setActiveTab] = React.useState('all')
   const tableRows = invoices || []
 
@@ -91,6 +91,15 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
     }
     return Object.entries(acc).map(([name, value]) => ({ name, value }))
   }, [filteredRows])
+
+  const byMonthData = useMemo(() => {
+    if (!analytics || !analytics.byMonth) return []
+    return Object.entries(analytics.byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, value]) => ({ name, value }))
+  }, [analytics])
+
+  // Pie chart removed per request
 
   return (
     <div className="dashboard-container">
@@ -146,19 +155,43 @@ export function Dashboard({ invoices, onRemoveInvoice }) {
         </table>
       </div>
 
-      <h2 className="dashboard-heading" style={{ marginTop: '2rem' }}>
-        Totals by Vendor
-      </h2>
-      <div className="chart-container">
-        <ResponsiveContainer>
-          <BarChart data={totalByVendor} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#3b82f6" />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="cards-grid">
+        <div className="stat-card">
+          <div className="stat-title">Documents</div>
+          <div className="stat-value">{analytics?.count ?? invoices.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-title">Total Amount</div>
+          <div className="stat-value">${(analytics?.amountSum ?? 0).toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div className="grid-2">
+        <div className="chart-container">
+          <h3 className="chart-title">Totals by Vendor</h3>
+          <ResponsiveContainer>
+            <BarChart data={totalByVendor} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#3b82f6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-container">
+          <h3 className="chart-title">Monthly Trend</h3>
+          <ResponsiveContainer>
+            <LineChart data={byMonthData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   )

@@ -10,7 +10,7 @@ import FormData from 'form-data';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import invoiceRoutes from './routes/invoiceRoutes.js';
-// import invoiceSchema from './models/Invoice.js';
+import Invoice from './models/Invoice.js';
 
 dotenv.config();
 
@@ -27,7 +27,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 }
 
 // MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
 await mongoose.connect(process.env.MONGO_URI) 
 .then(() => console.log("MongoDB connected"))
 .catch((err) => console.error(err));
@@ -80,12 +80,37 @@ app.post('/api/invoices', upload.single('file'), async (req, res) => {
 
     const data = response.data || {};
 
+    // Normalize numeric amount for analytics
+    const parseMoney = (val) => {
+      if (val === null || val === undefined) return undefined;
+      const n = parseFloat(String(val).replace(/[^0-9.\-]/g, ''));
+      return Number.isFinite(n) ? n : undefined;
+    };
+
+    const when = data.date || data.invoice_date || null;
+    const dt = when ? new Date(when) : null;
+
     const saved = await Invoice.create({
       filename: data.filename || filename,
-      vendor: data.vendor || null,
-      date: data.date || null,
-      total: data.total || null,
-      raw_text: data.raw_text || null
+      vendor: data.vendor || data.merchant || null,
+      date: when,
+      total: data.total || data.amount_total || null,
+      raw_text: data.raw_text || null,
+      subtotal: data.subtotal || data.sub_total || null,
+      tax: data.tax || data.vat || null,
+      currency: data.currency || null,
+      invoiceNumber: data.invoice_number || data.number || null,
+      dueDate: data.due_date || null,
+      category: data.category || null,
+      amount: parseMoney(data.total || data.amount_total),
+      year: dt ? dt.getUTCFullYear() : undefined,
+      month: dt ? dt.getUTCMonth() + 1 : undefined,
+      items: Array.isArray(data.items) ? data.items.map(i => ({
+        description: i.description || i.name || null,
+        quantity: typeof i.quantity === 'number' ? i.quantity : parseMoney(i.quantity) || undefined,
+        unitPrice: parseMoney(i.unitPrice || i.unit_price || i.price),
+        lineTotal: parseMoney(i.lineTotal || i.total)
+      })) : []
     });
 
     res.json(saved);
@@ -115,6 +140,44 @@ app.delete("/api/invoices/:id", async (req, res) => {
 app.get('/api/invoices', async (req, res) => {
   const items = await Invoice.find().sort({ createdAt: -1 }).lean();
   res.json(items);
+});
+
+// Aggregated analytics for dashboard cards and charts
+app.get('/api/analytics/summary', async (req, res) => {
+  try {
+    const docs = await Invoice.find().lean();
+    const toNumber = (v) => {
+      const n = parseFloat(String(v ?? '').replace(/[^0-9.\-]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const totals = {
+      count: docs.length,
+      amountSum: 0,
+      byVendor: {},
+      byMonth: {},
+      byCategory: {}
+    };
+
+    for (const d of docs) {
+      const amt = Number.isFinite(d.amount) ? d.amount : toNumber(d.total);
+      totals.amountSum += amt;
+
+      const vendor = d.vendor || 'Unknown';
+      totals.byVendor[vendor] = (totals.byVendor[vendor] || 0) + amt;
+
+      const keyMonth = (d.year && d.month) ? `${d.year}-${String(d.month).padStart(2, '0')}` : 'Unknown';
+      totals.byMonth[keyMonth] = (totals.byMonth[keyMonth] || 0) + amt;
+
+      const cat = d.category || 'Uncategorized';
+      totals.byCategory[cat] = (totals.byCategory[cat] || 0) + amt;
+    }
+
+    res.json(totals);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to compute analytics' });
+  }
 });
 
 app.listen(PORT, () => {
