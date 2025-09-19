@@ -20,7 +20,7 @@ export default function Landing() {
           <a href="#features">Features</a>
           <a href="#testimonials">Testimonials</a>
           <a href="#pricing">Pricing</a>
-          <button className="secondary-btn small" onClick={goToApp}>Try Demo</button>
+          <button className="secondary-btn small" onClick={() => { window.history.pushState({}, '', '/login'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Login</button>
           <button className="primary-btn small" onClick={goToApp}>Get Started</button>
         </nav>
       </header>

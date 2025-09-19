@@ -10,6 +10,7 @@ import FormData from 'form-data';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import invoiceRoutes from './routes/invoiceRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import Invoice from './models/Invoice.js';
 
 dotenv.config();
@@ -39,8 +40,11 @@ await mongoose.connect(process.env.MONGO_URI)
 const app = express();
 app.use(cors({ origin: CLIENT_ORIGIN }));
 app.use(morgan('dev'));
-app.use(express.json());
+// app.use(express.json());
+app.use(express.json({ extended: false }));
 app.use('/api/invoices', invoiceRoutes);
+// app.use('/api/auth', authRoutes);
+app.use('/api/auth', require('./routes/auth'));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
